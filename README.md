@@ -27,7 +27,10 @@
 - bemp：空位數量
 - act：全站禁用狀態
 [臺北市公共自行車即時資訊](http://data.taipei/youbike)
-[YouBike臺北市公共自行車即時資訊RID](http://data.taipei/opendata/datalist/apiAccess?scope=resourceAquire&rid=ddb80380-f1b3-4f8e-8016-7ed9cba571d5)
+
+### 停車場
+[停車場資訊](http://data.taipei/tcmsv/alldesc)
+[停車場剩餘停車位數](http://data.taipei/tcmsv/allavailable)
 
 ### All
 [臺北市政府 交通即時資料 開放資料專區](https://taipeicity.github.io/traffic_realtime/)
