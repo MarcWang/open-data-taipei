@@ -1,0 +1,22 @@
+{
+  "name": "open-data-taipei",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bus.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarcWang/open-data-taipei.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MarcWang/open-data-taipei/issues"
+  },
+  "homepage": "https://github.com/MarcWang/open-data-taipei#readme",
+  "dependencies": {
+    "request": "^2.75.0"
+  }
+}
