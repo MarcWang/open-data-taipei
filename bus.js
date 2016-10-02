@@ -1,7 +1,6 @@
 const fs = require('fs');
 const zlib = require('zlib')
 const request = require('request');
-const Immutable = require('immutable');
 
 let TPERouteList = new Map();
 let TPERouteNameMap = new Map();
@@ -32,6 +31,7 @@ function getRoute() {
                         value.push(data);
                         TPERouteList.set(id, value);
                         TPERouteNameMap.set(name, id);
+
                     }
                     resolve();
                 });
@@ -95,6 +95,7 @@ function getEstimateTime(name) {
                 zlib.gunzip(body, function(err, result) {
                     if (err) return console.error(err);
                     const jsonData = JSON.parse(result.toString());
+                    console.log(jsonData.BusInfo[0]);
                     for (let i = 0; i < jsonData.BusInfo.length; i++) {
                         let routeId = jsonData.BusInfo[i].RouteID;
                         if (routeId == id) {
