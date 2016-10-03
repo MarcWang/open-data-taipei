@@ -5,6 +5,8 @@ const busMgr = require('./../../managers/busMgr');
 const API_TAIPEI_BUS_ROUTE = `/api/taipei/bus/route/query`;
 const API_TAIPEI_BUS_ESTIMATE = `/api/taipei/bus/estimate`;
 
+
+
 module.exports = function() {
     const router = require('express').Router();
 
@@ -26,7 +28,7 @@ module.exports = function() {
         .get((request, response, next) => {
 
             let name = request.query.name;
-            busMgr.getEstimateTime({name: name})
+            busMgr.getEstimateTime({ name: name })
                 .then((value) => {
                     response.json({ code: 0, data: value });
                 })
