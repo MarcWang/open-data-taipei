@@ -1,18 +1,38 @@
 import test from 'ava';
+import fetch from 'node-fetch';
 
-test('foo', t => {
-    t.pass();
+test.cb.before(t => {
+    console.log('initialize');
+    t.end();  
 });
 
-test('bar', async t => {
-    const bar = Promise.resolve('bar');
+test.after(t => {
+    console.log('cleanup')
+});
 
-    t.is(await bar, 'bar');
+
+test.cb('foo', t => {
+    fetch('http://localhost:3000/api/taipei/bus/route/query', { method: 'GET' })
+        .then((res) => {
+            if (res.status == 200)
+                return res.json();
+            else
+                return { code: -1 };
+        })
+        .then((json) => {
+            console.log(json);
+            t.end();
+        });
+});
+
+test('true', t => {
+    let result = true;
+    t.true(result, 'result is true')
 });
 
 
 
-test('generate', t => {
+test.cb('generate', t => {
 
     function generatorFn() {
         setTimeout(() => { worker.next(); }, 0)
@@ -20,8 +40,10 @@ test('generate', t => {
     }
 
     function* work() {
-        const value = yield generatorFn();
-        t.true(value);
+        yield generatorFn();
+        let result = true;
+        t.true(result);
+        t.end();
     }
 
     let worker = work();

@@ -1,7 +1,7 @@
 const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const cors = require('cors');
 const BusService = require('./service/dataTaipei/bus');
 const RedisHandler = require('./persistence/redis');
 const Config = require('./config');
@@ -34,6 +34,7 @@ function* initialize() {
     let readyInitService = yield initService();
 
     let app = express();
+    app.use(cors());
     app.set('port', Config.SERVER.PORT || 3000);
 
     app.use(bodyParser.urlencoded({ extended: true })); //for parsing application/x-www-form-urlencoded
