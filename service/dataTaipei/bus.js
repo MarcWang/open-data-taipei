@@ -102,13 +102,13 @@ class BusService {
 
     queryRoute() {
         let self = this;
-
         return new Promise((resolve, reject) => {
+            let routes = [];
             self.TPERouteNameMap.forEach((value, key, map) => {
-                console.log(`name = ${key}, id = ${value}`);
+                // console.log(`name = ${key}, id = ${value}`);
+                routes.push({ name: key, id: value });
             });
-
-            resolve();
+            resolve(routes);
         })
     }
 

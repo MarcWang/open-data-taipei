@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 
 test.cb.before(t => {
     console.log('initialize');
-    t.end();  
+    t.end();
 });
 
 test.after(t => {
@@ -11,38 +11,23 @@ test.after(t => {
 });
 
 
-test.cb('foo', t => {
-    fetch('http://localhost:3000/api/taipei/bus/route/query', { method: 'GET' })
-        .then((res) => {
-            if (res.status == 200)
+test.cb('query taipei route', t => {
+    function query() {
+        fetch('http://localhost:8521/api/taipei/bus/route/query', { method: 'GET' })
+            .then((res) => {
+                t.is(res.status, 200, 'status code error');
                 return res.json();
-            else
-                return { code: -1 };
-        })
-        .then((json) => {
-            console.log(json);
-            t.end();
-        });
-});
-
-test('true', t => {
-    let result = true;
-    t.true(result, 'result is true')
-});
-
-
-
-test.cb('generate', t => {
-
-    function generatorFn() {
-        setTimeout(() => { worker.next(); }, 0)
-
+            })
+            .then((json) => {
+                worker.next(json);
+            });
     }
 
     function* work() {
-        yield generatorFn();
-        let result = true;
-        t.true(result);
+        let queryData = yield query();
+        t.is(queryData.code, 0, 'res code error');
+        t.true(typeof queryData.result === 'object', 'result is object');
+        t.true(typeof queryData.result.routes === 'object', 'result is array');
         t.end();
     }
 

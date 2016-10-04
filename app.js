@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const BusService = require('./service/dataTaipei/bus');
-const RedisHandler = require('./persistence/redis');
+// const RedisHandler = require('./persistence/redis');
 const Config = require('./config');
 
 process.env.NODE_ENV = `development`; //development, production
@@ -30,7 +30,7 @@ function initService() {
 
 function* initialize() {
 
-    let readyRedis = yield redisOpen();
+    // let readyRedis = yield redisOpen();
     let readyInitService = yield initService();
 
     let app = express();
@@ -43,7 +43,7 @@ function* initialize() {
     require('./controllers/apiRoutes')(app);
     const server = http.createServer(app).listen(app.get('port'), function() {
         console.log(`# Server listening on localhost: ${app.get('port')}`);
-        console.log(`# Redis://${RedisHandler.getUri()}`);
+        // console.log(`# Redis://${RedisHandler.getUri()}`);
     });
 }
 

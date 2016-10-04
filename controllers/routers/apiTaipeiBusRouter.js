@@ -14,7 +14,7 @@ module.exports = function() {
         .get((request, response, next) => {
             busMgr.queryRouteAll()
                 .then((value) => {
-                    response.json({ code: 0, data: value });
+                    response.json({ code: 0, result: { routes: value } });
                 })
                 .catch((error) => {
                     response.json({ code: -1 });
