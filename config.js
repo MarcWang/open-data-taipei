@@ -2,6 +2,7 @@
 module.exports = {
     SERVER:{
         PORT: 8521,
-        NAME: 'BUS'
+        NAME: 'BUS',
+        UPDATE: 10000
     }
 }

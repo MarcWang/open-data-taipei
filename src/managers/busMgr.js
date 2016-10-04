@@ -1,9 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
-const fs = require('fs');
-const moment = require('moment');
-const BusService = require('./../service/dataTaipei/bus');
+// const moment = require('moment');
+const BusService = require('./../service/dataTaipei/busService');
 // const RedisHandler = require(global.BASE_DIR + '/src/v1/persistence/redis')
 
 class BusHandler {
@@ -16,9 +15,10 @@ class BusHandler {
                 BusService.queryRoute()
                     .then((value) => {
                         readyWorker.next({ result: true, data: value });
-                    }).catch((err) => {
+                    }).catch((error) => {
+                        console.log(error);
                         readyWorker.next({ result: false });
-                    })
+                    });
             }
 
             function* workFlow() {
@@ -50,9 +50,10 @@ class BusHandler {
                 BusService.getEstimateTime({ name: busName })
                     .then((value) => {
                         readyWorker.next({ result: true, data: value });
-                    }).catch((err) => {
+                    }).catch((error) => {
+                        console.log(error);
                         readyWorker.next({ result: false });
-                    })
+                    });
             }
 
             function* workFlow() {

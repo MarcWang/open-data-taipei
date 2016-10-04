@@ -2,7 +2,7 @@ const moment = require('moment');
 const taipeiBusRouter = require('./routers/apiTaipeiBusRouter');
 const router = require('express').Router();
 
-module.exports = function(app, logHandler) {
+module.exports = function(app) {
 
     router.use((request, response, next) => {
         console.log(`${request.method}: ${request.originalUrl} From '${request.hostname}', Time: ${moment().format()} `);

@@ -1,6 +1,7 @@
-const zlib = require('zlib')
+const zlib = require('zlib');
 const request = require('request');
-const RedisHandler = require('./../../persistence/redis');
+const Config = require('../../../config');
+// const RedisHandler = require('./../../persistence/redis');
 
 function requestData(url) {
     return new Promise((resolve, reject) => {
@@ -19,9 +20,9 @@ function requestData(url) {
                         } else {
                             resolve(JSON.parse(result.toString()));
                         }
-                    })
+                    });
                 }
-            })
+            });
     });
 }
 
@@ -64,7 +65,7 @@ class BusService {
                 let name = rawData.BusInfo[i].nameZh;
                 let data = rawData.BusInfo[i];
                 self.TPERouteStopNameMap.set(id, name);
-                self.TPERouteStopList.set(id, data)
+                self.TPERouteStopList.set(id, data);
             }
         }
 
@@ -85,15 +86,15 @@ class BusService {
                 .then((value) => {
                     self.TPERouteEstimateData = value;
                 })
-                .catch((error) => {})
-        }, 10000);
+                .catch((error) => { console.log(error); });
+        }, Config.SERVER.UPDATE);
     }
 
     translateTime(sec) {
         if (sec > 60) {
             let m = Math.floor(sec / 60);
             let s = sec % 60;
-            return `${m} 分 ${s} 秒`
+            return `${m} 分 ${s} 秒`;
         } else {
             let s = sec;
             return `${s} 秒`;
@@ -102,14 +103,14 @@ class BusService {
 
     queryRoute() {
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let routes = [];
-            self.TPERouteNameMap.forEach((value, key, map) => {
+            self.TPERouteNameMap.forEach((value, key) => {
                 // console.log(`name = ${key}, id = ${value}`);
                 routes.push({ name: key, id: value });
             });
             resolve(routes);
-        })
+        });
     }
 
     getEstimateTime(params) {
@@ -130,7 +131,7 @@ class BusService {
                         if (goBack == 0) {
                             console.log(`Name: ${stopName}, Time: ${self.translateTime(estimateTime)}`);
                         } else {
-
+                            console.log('goBack');
                         }
                     }
                 }
@@ -138,8 +139,7 @@ class BusService {
             } else {
                 reject('error data null');
             }
-        })
-
+        });
     }
 }
 

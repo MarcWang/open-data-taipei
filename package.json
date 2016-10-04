@@ -1,32 +1,35 @@
 {
-  "name": "open-data-taipei",
-  "version": "1.0.0",
-  "description": "",
-  "main": "bus.js",
-  "scripts": {
-    "test": "ava ./tests/bus.test.js --verbose"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MarcWang/open-data-taipei.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/MarcWang/open-data-taipei/issues"
-  },
-  "homepage": "https://github.com/MarcWang/open-data-taipei#readme",
-  "dependencies": {
-    "body-parser": "^1.15.2",
-    "cors": "^2.8.1",
-    "express": "^4.14.0",
-    "lodash": "^4.16.2",
-    "moment": "^2.15.1",
-    "redis": "^2.6.2",
-    "request": "^2.75.0"
-  },
-  "devDependencies": {
-    "ava": "^0.16.0",
-    "node-fetch": "^1.6.3"
-  }
+    "name": "open-data-taipei",
+    "version": "1.0.0",
+    "description": "",
+    "main": "bus.js",
+    "scripts": {
+        "start": "node ./app.js",
+        "test": "ava ./tests/bus.test.js --verbose",
+        "lint": "eslint app.js 'controllers/**' 'managers/**' 'service/dataTaipei/**'"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MarcWang/open-data-taipei.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/MarcWang/open-data-taipei/issues"
+    },
+    "homepage": "https://github.com/MarcWang/open-data-taipei#readme",
+    "dependencies": {
+        "body-parser": "^1.15.2",
+        "cors": "^2.8.1",
+        "express": "^4.14.0",
+        "lodash": "^4.16.2",
+        "moment": "^2.15.1",
+        "redis": "^2.6.2",
+        "request": "^2.75.0"
+    },
+    "devDependencies": {
+        "ava": "^0.16.0",
+        "eslint": "^3.7.1",
+        "node-fetch": "^1.6.3"
+    }
 }

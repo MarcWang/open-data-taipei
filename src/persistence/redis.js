@@ -1,4 +1,4 @@
-const redis = require("redis");
+const redis = require('redis');
 const _ = require('lodash');
 
 const dbOptions = {
@@ -16,20 +16,20 @@ class RedisHandler {
         return `${dbOptions.host}:${dbOptions.port}`;
     }
 
-    connect(reConnectTime) {
+    connect() {
         let self = this;
         self.handler = redis.createClient(dbOptions);
     }
 
     onOpen(cb) {
         let self = this;
-        self.handler.on("ready", cb);
+        self.handler.on('ready', cb);
     }
 
     onError(cb) {
         let self = this;
         // self.handler.on('error', cb);
-        self.handler.on("reconnecting", (value) => {
+        self.handler.on('reconnecting', (value) => {
             cb(`Reconnect Redis ${value.address}:${value.port}, counts = ${value.attempt}`);
         });
     }
@@ -39,9 +39,9 @@ class RedisHandler {
         let saveData = {
             type: 'String',
             data: undefined
-        }
+        };
 
-        if (_.isString(value)){
+        if (_.isString(value)) {
             saveData.type = 'String';
             saveData.data = value;
         }
@@ -60,15 +60,15 @@ class RedisHandler {
 
     getValue(key, cb) {
         let self = this;
-        self.handler.get(key, (err, reply) =>{
+        self.handler.get(key, (err, reply) => {
             let obj = JSON.parse(reply);
-            if( obj.type == 'String' ){
+            if (obj.type == 'String') {
                 cb(obj.data);
             }
-            if( obj.type == 'Object'){
+            if (obj.type == 'Object') {
                 cb(JSON.parse(obj.data));
             }
-            if( obj.type == 'Number'){
+            if (obj.type == 'Number') {
                 cb(Number(obj.data));
             }
         });
