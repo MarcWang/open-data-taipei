@@ -34,3 +34,27 @@ test.cb('query taipei route', t => {
     let worker = work();
     worker.next();
 });
+
+test.cb('get taipei estimate', t => {
+    function query() {
+        fetch(`http://localhost:8521/api/taipei/bus/route/estimate?name=518&goBack=1`, { method: 'GET' })
+            .then((res) => {
+                t.is(res.status, 200, 'status code error');
+                return res.json();
+            })
+            .then((json) => {
+                worker.next(json);
+            });
+    }
+
+    function* work() {
+        let queryData = yield query();
+        console.log(queryData);
+        t.end();
+    }
+
+    let worker = work();
+    worker.next();
+});
+
+

@@ -40,14 +40,18 @@ class BusHandler {
             if (!_.isObject(params)) {
                 reject({ code: -1 });
             }
-            const { name } = params;
 
-            if( !_.isString(name)){
+            const { name, id, goBack } = params;
+            if (!_.isString(name) && !_.isString(id)) {
                 reject({ code: -1 });
             }
 
-            function getEstimate(busName) {
-                BusService.getEstimateTime({ name: busName })
+            if (!_.isString(goBack)) {
+                reject({ code: -1 });
+            }
+
+            function getEstimate() {
+                BusService.getEstimateTime({ name: name, id: id, goBack: goBack })
                     .then((value) => {
                         readyWorker.next({ result: true, data: value });
                     }).catch((error) => {
@@ -57,7 +61,7 @@ class BusHandler {
             }
 
             function* workFlow() {
-                let readyGetEstimate = yield getEstimate(name);
+                let readyGetEstimate = yield getEstimate();
                 if (readyGetEstimate.result) {
                     resolve(readyGetEstimate.data);
                 } else {

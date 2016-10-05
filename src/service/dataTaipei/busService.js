@@ -1,5 +1,6 @@
 const zlib = require('zlib');
 const request = require('request');
+const moment = require('moment');
 const Config = require('../../../config');
 // const RedisHandler = require('./../../persistence/redis');
 
@@ -34,6 +35,7 @@ class BusService {
     constructor() {
         this.TPERouteList = new Map();
         this.TPERouteNameMap = new Map();
+        this.TPERouteIdMap = new Map();
         this.TPERouteStopList = new Map();
         this.TPERouteStopNameMap = new Map();
         this.TPERouteEstimateData = null;
@@ -49,13 +51,20 @@ class BusService {
                 let name = rawData.BusInfo[i].nameZh;
                 let id = rawData.BusInfo[i].Id;
                 let data = rawData.BusInfo[i];
+                let path = `${rawData.BusInfo[i].departureZh} - ${rawData.BusInfo[i].destinationZh}`;
                 let value = [];
                 if (self.TPERouteList.has(id)) {
                     value = self.TPERouteList.get(id);
                 }
                 value.push(data);
                 self.TPERouteList.set(id, value);
-                self.TPERouteNameMap.set(name, id);
+                let busInfo = {
+                    id: id,
+                    name: name,
+                    path: path
+                };
+                self.TPERouteNameMap.set(name, busInfo);
+                self.TPERouteIdMap.set(id, busInfo);
             }
         }
 
@@ -90,24 +99,13 @@ class BusService {
         }, Config.SERVER.UPDATE);
     }
 
-    translateTime(sec) {
-        if (sec > 60) {
-            let m = Math.floor(sec / 60);
-            let s = sec % 60;
-            return `${m} 分 ${s} 秒`;
-        } else {
-            let s = sec;
-            return `${s} 秒`;
-        }
-    }
-
     queryRoute() {
         let self = this;
         return new Promise((resolve) => {
             let routes = [];
             self.TPERouteNameMap.forEach((value, key) => {
                 // console.log(`name = ${key}, id = ${value}`);
-                routes.push({ name: key, id: value });
+                routes.push({ name: key, id: value.id, path: value.path });
             });
             resolve(routes);
         });
@@ -115,27 +113,46 @@ class BusService {
 
     getEstimateTime(params) {
         let self = this;
-        const { name } = params;
+        const { name, id, goBack } = params;
 
         return new Promise((resolve, reject) => {
             const estData = self.TPERouteEstimateData;
-            const id = self.TPERouteNameMap.get(name);
+            let data = null;
+            if( name !== undefined )
+                data = self.TPERouteNameMap.get(name);
+            else
+                data = self.TPERouteIdMap.get(id);
+            const busInfo = data;
+
             if (estData != null) {
+                let busResult = {
+                    updateTime: moment().format(),
+                    goBack: goBack,
+                    path: busInfo.path,
+                    stops: []
+                };
                 for (let i = 0; i < estData.BusInfo.length; i++) {
                     let routeId = estData.BusInfo[i].RouteID;
-                    if (routeId == id) {
+                    if (routeId == busInfo.id) {
                         let stopId = estData.BusInfo[i].StopID;
                         let estimateTime = estData.BusInfo[i].EstimateTime;
                         let stopName = self.TPERouteStopNameMap.get(stopId);
-                        let goBack = estData.BusInfo[i].GoBack;
-                        if (goBack == 0) {
-                            console.log(`Name: ${stopName}, Time: ${self.translateTime(estimateTime)}`);
-                        } else {
-                            console.log('goBack');
+                        let busGoBack = estData.BusInfo[i].GoBack;
+                        if (busGoBack == goBack) {
+                            let stopInfo = {
+                                name: stopName,
+                                id: stopId,
+                                estimate: {
+                                    state: (estimateTime < 0) ? estimateTime : 0,
+                                    minute: Math.floor(estimateTime / 60),
+                                    second: estimateTime % 60
+                                }
+                            };
+                            busResult.stops.push(stopInfo);
                         }
                     }
                 }
-                resolve('successed');
+                resolve(busResult);
             } else {
                 reject('error data null');
             }
