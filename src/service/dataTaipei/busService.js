@@ -2,6 +2,7 @@ const zlib = require('zlib');
 const request = require('request');
 const moment = require('moment');
 const Config = require('../../../config');
+const _ = require('lodash');
 // const RedisHandler = require('./../../persistence/redis');
 
 function requestData(url) {
@@ -33,62 +34,80 @@ const TAIPEI_BUS_ESTIMATE = 'http://data.taipei/bus/EstimateTime';
 
 class BusService {
     constructor() {
-        this.TPERouteList = new Map();
-        this.TPERouteNameMap = new Map();
-        this.TPERouteIdMap = new Map();
-        this.TPERouteStopList = new Map();
-        this.TPERouteStopNameMap = new Map();
         this.TPERouteEstimateData = null;
-    }
 
-    initialize(cb) {
-        let self = this;
-        let busRoute = requestData(TAIPEI_BUS_ROUTE);
-        let busStop = requestData(TAIPEI_BUS_STOP);
+        this.TPERouteInfoList = {
+            srcUpdate: null,
+            update: null,
+            idMap: new Map(),
+            nameMap: new Map(),
+            data: []
+        };
 
-        function collectRoute(rawData) {
+        this.TPERouteStopInfoList = {
+            srcUpdate: null,
+            update: null,
+            idMap: new Map()
+        };
+
+        this.collectRoute = function(rawData) {
+            let updateData = {
+                update: moment().format(),
+                idMap: new Map(),
+                nameMap: new Map(),
+                data: []
+            };
+
             for (let i = 0; i < rawData.BusInfo.length; i++) {
                 let name = rawData.BusInfo[i].nameZh;
                 let id = rawData.BusInfo[i].Id;
-                let data = rawData.BusInfo[i];
                 let path = `${rawData.BusInfo[i].departureZh} - ${rawData.BusInfo[i].destinationZh}`;
-                let value = [];
-                if (self.TPERouteList.has(id)) {
-                    value = self.TPERouteList.get(id);
-                }
-                value.push(data);
-                self.TPERouteList.set(id, value);
                 let busInfo = {
                     id: id,
                     name: name,
                     path: path
                 };
-                self.TPERouteNameMap.set(name, busInfo);
-                self.TPERouteIdMap.set(id, busInfo);
+                updateData.data.push(busInfo);
+                updateData.nameMap.set(name, busInfo);
+                updateData.idMap.set(id, busInfo);
             }
-        }
+            this.TPERouteInfoList = _.cloneDeep(updateData);
+        };
 
-        function collectStop(rawData) {
+        this.collectStop = function(rawData) {
+            let updateData = {
+                update: moment().format(),
+                idMap: new Map()
+            }
             for (let i = 0; i < rawData.BusInfo.length; i++) {
                 let id = rawData.BusInfo[i].Id;
                 let name = rawData.BusInfo[i].nameZh;
-                let data = rawData.BusInfo[i];
-                self.TPERouteStopNameMap.set(id, name);
-                self.TPERouteStopList.set(id, data);
+                updateData.idMap.set(id, name);
             }
-        }
+            this.TPERouteStopInfoList = _.cloneDeep(updateData);
+        };
 
-        Promise.all([busRoute, busStop])
-            .then((values) => {
-                let routeData = values[0];
-                collectRoute(routeData);
-                let stopData = values[1];
-                collectStop(stopData);
-                cb(null, 'extract bus information was successed');
-            })
-            .catch((error) => {
-                cb(error);
-            });
+
+        this.checkRoute = function(cb) {
+            let busRoute = requestData(TAIPEI_BUS_ROUTE);
+            let busStop = requestData(TAIPEI_BUS_STOP);
+            Promise.all([busRoute, busStop])
+                .then((values) => {
+                    let routeData = values[0];
+                    this.collectRoute(routeData);
+                    let stopData = values[1];
+                    this.collectStop(stopData);
+                    cb(null, 'extract bus information was successed');
+                })
+                .catch((error) => {
+                    cb(error);
+                });
+        };
+    }
+
+    initialize(cb) {
+        let self = this;
+        self.checkRoute(cb);
 
         setInterval(() => {
             requestData(TAIPEI_BUS_ESTIMATE)
@@ -102,11 +121,7 @@ class BusService {
     queryRoute() {
         let self = this;
         return new Promise((resolve) => {
-            let routes = [];
-            self.TPERouteNameMap.forEach((value, key) => {
-                // console.log(`name = ${key}, id = ${value}`);
-                routes.push({ name: key, id: value.id, path: value.path });
-            });
+            let routes = self.TPERouteInfoList.data;
             resolve(routes);
         });
     }
@@ -118,10 +133,10 @@ class BusService {
         return new Promise((resolve, reject) => {
             const estData = self.TPERouteEstimateData;
             let data = null;
-            if( name !== undefined )
-                data = self.TPERouteNameMap.get(name);
+            if (name !== undefined)
+                data = self.TPERouteInfoList.nameMap.get(name);
             else
-                data = self.TPERouteIdMap.get(id);
+                data = self.TPERouteInfoList.idMap.get(id);
             const busInfo = data;
 
             if (estData != null) {
@@ -136,7 +151,7 @@ class BusService {
                     if (routeId == busInfo.id) {
                         let stopId = estData.BusInfo[i].StopID;
                         let estimateTime = estData.BusInfo[i].EstimateTime;
-                        let stopName = self.TPERouteStopNameMap.get(stopId);
+                        let stopName = self.TPERouteStopInfoList.idMap.get(stopId);
                         let busGoBack = estData.BusInfo[i].GoBack;
                         if (busGoBack == goBack) {
                             let stopInfo = {
@@ -161,141 +176,3 @@ class BusService {
 }
 
 module.exports = new BusService();
-
-
-
-
-
-// function getRoute() {
-//     return new Promise((resolve, reject) => {
-//         request({
-//             url: TAIPEI_BUS_ROUTE,
-//             method: 'GET',
-//             encoding: null
-//         }, (err, response, body) => {
-//             if (err) {
-//                 return reject(err);
-//             } else {
-//                 zlib.gunzip(body, function(err, result) {
-//                     if (err) return console.error(err);
-//                     const jsonData = JSON.parse(result.toString());
-//                     for (let i = 0; i < jsonData.BusInfo.length; i++) {
-//                         let name = jsonData.BusInfo[i].nameZh;
-//                         let id = jsonData.BusInfo[i].Id;
-//                         let data = jsonData.BusInfo[i];
-//                         let value = [];
-//                         if (TPERouteList.has(id)) {
-//                             value = TPERouteList.get(id);
-//                         }
-//                         value.push(data);
-//                         TPERouteList.set(id, value);
-//                         TPERouteNameMap.set(name, id);
-
-//                     }
-//                     resolve();
-//                 });
-//             }
-//         });
-//     });
-// };
-
-// function getStop() {
-//     return new Promise((resolve, reject) => {
-//         request({
-//             url: 'http://data.taipei/bus/Stop',
-//             method: 'GET',
-//             encoding: null
-//         }, (err, response, body) => {
-//             if (err) {
-//                 return reject(err);
-//             } else {
-//                 zlib.gunzip(body, function(err, result) {
-//                     if (err) return console.error(err);
-//                     const jsonData = JSON.parse(result.toString());
-//                     for (let i = 0; i < jsonData.BusInfo.length; i++) {
-//                         let id = jsonData.BusInfo[i].Id;
-//                         let name = jsonData.BusInfo[i].nameZh;
-//                         let data = jsonData.BusInfo[i];
-//                         TPERouteStopNameMap.set(id, name);
-//                         TPERouteStopList.set(id, data)
-//                     }
-//                     resolve();
-//                 });
-//             }
-//         });
-//     });
-// };
-
-// function translateTime(sec) {
-//     if (sec > 60) {
-//         let m = Math.floor(sec / 60);
-//         let s = sec % 60;
-//         return `${m} 分 ${s} 秒`
-//     } else {
-//         let s = sec;
-//         return `${s} 秒`;
-//     }
-// }
-
-// function getEstimateTime(name) {
-//     return new Promise((resolve, reject) => {
-
-//         let id = TPERouteNameMap.get(name);
-//         console.log(`id = ${id} , name: ${name}`);
-
-//         request({
-//             url: 'http://data.taipei/bus/EstimateTime',
-//             method: 'GET',
-//             encoding: null
-//         }, (err, response, body) => {
-//             if (err) {
-//                 return reject(err);
-//             } else {
-//                 zlib.gunzip(body, function(err, result) {
-//                     if (err) return console.error(err);
-//                     const jsonData = JSON.parse(result.toString());
-//                     console.log(jsonData.BusInfo[0]);
-//                     for (let i = 0; i < jsonData.BusInfo.length; i++) {
-//                         let routeId = jsonData.BusInfo[i].RouteID;
-//                         if (routeId == id) {
-//                             let stopId = jsonData.BusInfo[i].StopID;
-//                             let estimateTime = jsonData.BusInfo[i].EstimateTime;
-//                             let stopName = TPERouteStopNameMap.get(stopId);
-//                             let goBack = jsonData.BusInfo[i].GoBack;
-//                             if (goBack == 0) {
-//                                 console.log(`Name: ${stopName}, Time: ${translateTime(estimateTime)}`);
-//                             } else {
-
-//                             }
-//                         }
-//                     }
-//                 });
-//             }
-//         });
-//     });
-// };
-
-
-
-// getRoute()
-//     .then(() => {
-//         // TPERouteList.forEach((value, key, map) => {
-//         //     for (let i = 0; i < value.length; i++) {
-//         //      console.log(`id = ${key} , ${value[i].pathAttributeName}`);
-//         //     }
-//         // });
-//         // TPERouteNameMap.forEach((value, key, map) => {
-//         //     console.log(`name = ${key}, id = ${value}`);
-//         // });
-//         getStop()
-//             .then(() => {
-//                 // TPERouteStopList.forEach((value, key, map) => {
-//                 //     console.log(`id = ${key} , ${value.nameZh}`);
-//                 // })
-//                 setInterval(() => {
-//                     let busName = '518';
-//                     getEstimateTime(busName)
-//                         .then(() => {})
-//                 }, 10 * 1000)
-//             })
-//     })
